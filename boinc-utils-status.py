@@ -1,6 +1,5 @@
 #from xmlrpc.client import ServerProxy, Error, ProtocolError
 import socket
-from utils import request_template
 from request import Request
 
 HOST = 'localhost'
@@ -16,5 +15,5 @@ if __name__ == "__main__":
     #print('Received', repr(data))
     r = Request(HOST, PORT)
     r.connect()
-    print(repr(r.request(request_template('<get_host_info/>'))))
+    print(repr(r.get_host_info()))
     r.close()
