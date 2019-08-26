@@ -19,7 +19,9 @@ class Request(object):
 
     def request(self, data):
         self.s.sendall(data)
-        return self.s.recv(2048)
+        # [:-1] removes b'\x03' from boinc responce
+        return self.s.recv(2048)[:-1]
 
     def get_host_info(self):
-        return self.request(request_template('<get_host_info/>'))
+        xml = self.request(request_template('<get_host_info/>'))
+        return ET.fromstring(xml)
