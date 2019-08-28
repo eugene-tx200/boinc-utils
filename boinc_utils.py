@@ -12,8 +12,7 @@ def print_child(data):
         if child:
             print_child(child)
 
-if __name__ == "__main__":
-    print("Boinc utils status")
+def get_host_info():
     r = Request(HOST, PORT)
     r.connect()
     data = r.get_host_info()
