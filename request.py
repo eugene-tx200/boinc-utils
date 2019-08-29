@@ -25,3 +25,7 @@ class Request(object):
     def get_host_info(self):
         xml = self.request(request_template('<get_host_info/>'))
         return ET.fromstring(xml)
+
+    def exchange_versions(self):
+        xml = self.request(request_template('<exchange_versions><major></major><minor></minor><release></release></exchange_versions>'))
+        return ET.fromstring(xml)

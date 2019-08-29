@@ -18,3 +18,10 @@ def get_host_info():
     data = r.get_host_info()
     print_child(data)
     r.close()
+
+def exchange_versions():
+    r = Request(HOST, PORT)
+    r.connect()
+    data = r.exchange_versions()
+    print_child(data)
+    r.close()
