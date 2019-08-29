@@ -14,14 +14,24 @@ def print_child(data):
 
 def get_host_info():
     r = Request(HOST, PORT)
-    r.connect()
-    data = r.get_host_info()
-    print_child(data)
-    r.close()
+# Using 'connect()' and 'close()' methods
+#    r.connect()
+#    data = r.get_host_info()
+#    print_child(data)
+#    r.close()
+# Using 'with'statement
+    with r:
+        data = r.get_host_info()
+        print_child(data)
 
 def exchange_versions():
     r = Request(HOST, PORT)
-    r.connect()
-    data = r.exchange_versions()
-    print_child(data)
-    r.close()
+    with r:
+        data = r.exchange_versions()
+        print_child(data)
+
+def get_state():
+    r = Request(HOST, PORT)
+    with r:
+        data = r.get_state()
+        print_child(data)

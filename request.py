@@ -11,6 +11,13 @@ class Request(object):
         self.host = host
         self.port = port
 
+    def __enter__(self):
+        self.connect()
+
+    def __exit__(self, type, value, traceback):
+        # Check socket documentation for possible exceptions
+        self.close()
+
     def connect(self):
         self.s = socket.create_connection((self.host, self.port))
 
@@ -20,7 +27,7 @@ class Request(object):
     def request(self, data):
         self.s.sendall(data)
         # [:-1] removes b'\x03' from boinc responce
-        return self.s.recv(2048)[:-1]
+        return self.s.recv(8192)[:-1]
 
     def get_host_info(self):
         xml = self.request(request_template('<get_host_info/>'))
@@ -28,4 +35,8 @@ class Request(object):
 
     def exchange_versions(self):
         xml = self.request(request_template('<exchange_versions><major></major><minor></minor><release></release></exchange_versions>'))
+        return ET.fromstring(xml)
+
+    def get_state(self):
+        xml = self.request(request_template('<get_state/>'))
         return ET.fromstring(xml)
