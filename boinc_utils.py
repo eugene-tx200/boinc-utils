@@ -5,6 +5,8 @@ import xml.etree.ElementTree as ET
 
 HOST = 'localhost'
 PORT = 31416
+# Password stored in /etc/boinc-client/gui_rpc_auth.cfg
+PASSWORD = 'G3d2H5z1M7'
 
 def print_child(data):
     for child in data:
@@ -34,4 +36,10 @@ def get_state():
     r = Request(HOST, PORT)
     with r:
         data = r.get_state()
+        print_child(data)
+
+def acct_mgr_info():
+    r = Request(HOST, PORT)
+    with r:
+        data = r.auth(PASSWORD)
         print_child(data)
