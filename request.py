@@ -38,7 +38,11 @@ class Request(object):
         m.update(password.encode('utf-8'))
         md5pwd = m.hexdigest()
         #md5pwd = hashlib.md5(''.join((nonce, password)).encode('utf-8')).hexdigest()
-        xml2 = self.request(request_template('<auth2><nonce_hash>{}</nonce_hash></auth2>'.format(nonce)))
+        xml2 = self.request(request_template('<auth2>'
+                                             '<nonce_hash>'
+                                             '{}'
+                                             '</nonce_hash>'
+                                             '</auth2>'.format(nonce)))
         reply2 = ET.fromstring(xml2)
         return reply2
 
@@ -52,7 +56,11 @@ class Request(object):
         return ET.fromstring(xml)
 
     def exchange_versions(self):
-        xml = self.request(request_template('<exchange_versions><major></major><minor></minor><release></release></exchange_versions>'))
+        xml = self.request(request_template('<exchange_versions>'
+                                            '<major></major>'
+                                            '<minor></minor>'
+                                            '<release></release>'
+                                            '</exchange_versions>'))
         return ET.fromstring(xml)
 
     def get_state(self):
