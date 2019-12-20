@@ -2,7 +2,6 @@ import socket
 import xml.etree.ElementTree as ET
 import hashlib
 
-
 def request_template(req):
     s = '<boinc_gui_rpc_request>{}</boinc_gui_rpc_request>\003'.format(req)
     return bytes(s, 'utf-8')
@@ -11,9 +10,11 @@ def request_template(req):
 #    s = 
 
 class Request(object):
-    def __init__(self, host='localhost', port=31416):
+    def __init__(self, host='localhost', port=31416, password=False):
         self.host = host
         self.port = port
+        #TODO: Read password from /etc
+        self.password = password
 
     def __enter__(self):
         self.connect()
@@ -28,24 +29,22 @@ class Request(object):
     def close(self):
         self.s.close()
 
-    def auth(self, password):
+    def auth(self):
         xml = self.request(request_template('<auth1/>'))
         reply1 = ET.fromstring(xml)
         nonce = reply1.find('nonce').text
-        # md5(nonce+password)
         m = hashlib.md5()
-        m.update(nonce.encode('utf-8'))
-        m.update(password.encode('utf-8'))
-        md5pwd = m.hexdigest()
-        #md5pwd = hashlib.md5(''.join((nonce, password)).encode('utf-8')).hexdigest()
+        m.update(''.join((nonce, self.password)).encode('utf-8'))
+        md5noncepwd = m.hexdigest()
         xml2 = self.request(request_template('<auth2>'
                                              '<nonce_hash>'
                                              '{}'
                                              '</nonce_hash>'
-                                             '</auth2>'.format(nonce)))
+                                             '</auth2>'.format(md5noncepwd)))
         reply2 = ET.fromstring(xml2)
-        return reply2
-
+        #TODO Error if not 'authorized' 
+        print(reply2[0].tag)
+        
     def request(self, data):
         self.s.sendall(data)
         # [:-1] removes b'\x03' from boinc responce
@@ -65,4 +64,9 @@ class Request(object):
 
     def get_state(self):
         xml = self.request(request_template('<get_state/>'))
+        return ET.fromstring(xml)
+
+    def acct_mgr_info(self):
+        self.auth()
+        xml = self.request(request_template('<acct_mgr_info/>'))
         return ET.fromstring(xml)

@@ -39,7 +39,7 @@ def get_state():
         print_child(data)
 
 def acct_mgr_info():
-    r = Request(HOST, PORT)
+    r = Request(HOST, PORT, PASSWORD)
     with r:
-        data = r.auth(PASSWORD)
+        data = r.acct_mgr_info()
         print_child(data)
