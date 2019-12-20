@@ -34,7 +34,9 @@ class Request(object):
         reply1 = ET.fromstring(xml)
         nonce = reply1.find('nonce').text
         m = hashlib.md5()
-        m.update(''.join((nonce, self.password)).encode('utf-8'))
+        # md5(nonce+password) for the second reply
+        m.update(nonce.encode('utf-8'))
+        m.update(self.password.encode('utf-8'))
         md5noncepwd = m.hexdigest()
         xml2 = self.request(request_template('<auth2>'
                                              '<nonce_hash>'
