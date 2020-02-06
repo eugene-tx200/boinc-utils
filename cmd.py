@@ -17,16 +17,17 @@ def print_child(data):
             print_child(child)
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--get_host_info", help="show host info",
-                    action="store_true")
-parser.add_argument("--client_version", help="show client version",
-                    action="store_true")
-parser.add_argument("--get_state", help="show entire state",
-                    action="store_true")
-parser.add_argument("--acct_mgr_info", help="show current account manager info",
-                    action="store_true")
-
+parser = argparse.ArgumentParser(allow_abbrev=False)
+parser.add_argument('--get_host_info', help='show host info',
+                    action='store_true')
+parser.add_argument('--client_version', help='show client version',
+                    action='store_true')
+parser.add_argument('--get_state', help='show entire state',
+                    action='store_true')
+parser.add_argument('--acct_mgr_info', help='show current account manager info',
+                    action='store_true')
+parser.add_argument('--acct_mgr_attach', nargs=3, help='attach to account manager',
+                    metavar=('URL','name', 'password'))
 args = parser.parse_args()
 
 if args.get_host_info:
@@ -58,3 +59,6 @@ if args.acct_mgr_info:
     with r:
         data = r.acct_mgr_info()
         print_child(data)
+
+if args.acct_mgr_attach:
+    print(args.acct_mgr_attach)
