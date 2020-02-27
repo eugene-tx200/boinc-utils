@@ -12,7 +12,7 @@ PASSWORD = 'G3d2H5z1M7'
 
 def print_child(data):
     for child in data:
-        print ('{}: {}'.format(child.tag, child.text))
+        print('{}: {}'.format(child.tag, child.text))
         if child:
             print_child(child)
 
@@ -27,7 +27,7 @@ parser.add_argument('--get_state', help='show entire state',
 parser.add_argument('--acct_mgr_info', help='show current account manager info',
                     action='store_true')
 parser.add_argument('--acct_mgr_attach', nargs=3, help='attach to account manager',
-                    metavar=('URL','name', 'password'))
+                    metavar=('URL', 'name', 'password'))
 args = parser.parse_args()
 
 if args.get_host_info:

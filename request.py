@@ -53,8 +53,15 @@ class Request(object):
         return self.s.recv(8192)[:-1]
 
     def get_host_info(self):
-        xml = self.request(request_template('<get_host_info/>'))
-        return ET.fromstring(xml)
+        #xml = self.request(request_template('<get_host_info/>'))
+        #return ET.fromstring(xml)
+        # Rewrite using ET
+        xml = ET.Element('boinc_gui_rpc_request')
+        sub_el = ET.SubElement(xml, 'get_host_info')
+        #xml = ET.tostring(xml) + b'\003'
+        result = self.request(ET.tostring(xml) + b'\003')
+        return ET.fromstring(result)
+        
 
     def exchange_versions(self):
         xml = self.request(request_template('<exchange_versions>'
@@ -72,3 +79,14 @@ class Request(object):
         self.auth()
         xml = self.request(request_template('<acct_mgr_info/>'))
         return ET.fromstring(xml)
+
+    def acct_mgr_attach(self, url, name, password):
+        self.auth()
+        xml_template = (f'<acct_mgr_rpc>'
+                        f'<url>{url}</url>'
+                        f'<name>{name}</name>'
+                        f'<password>{password}</password>'
+                        f'</acct_mgr_rpc>')
+        xml = self.request(request_template(xml_template))
+        # Stopped because of rewrite using xml.ET
+        pass
