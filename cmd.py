@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 import argparse
-import socket
-import xml.etree.ElementTree as ET
 from request import Request
 
 
@@ -10,8 +8,8 @@ PORT = 31416
 # Password stored in /etc/boinc-client/gui_rpc_auth.cfg
 PASSWORD = 'G3d2H5z1M7'
 
-def print_child(data):
-    for child in data:
+def print_child(et):
+    for child in et:
         print('{}: {}'.format(child.tag, child.text))
         if child:
             print_child(child)

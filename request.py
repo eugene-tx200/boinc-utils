@@ -3,13 +3,10 @@ import xml.etree.ElementTree as ET
 import hashlib
 
 def request_template(req):
-    s = '<boinc_gui_rpc_request>{}</boinc_gui_rpc_request>\003'.format(req)
-    return bytes(s, 'utf-8')
+    xml = '<boinc_gui_rpc_request>{}</boinc_gui_rpc_request>\003'.format(req)
+    return bytes(xml, 'utf-8')
 
-#def auth2_template(req):
-#    s = 
-
-class Request(object):
+class Request():
     def __init__(self, host='localhost', port=31416, password=False):
         self.host = host
         self.port = port
@@ -19,49 +16,44 @@ class Request(object):
     def __enter__(self):
         self.connect()
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, x_type, value, traceback):
         # Check socket documentation for possible exceptions
         self.close()
 
     def connect(self):
-        self.s = socket.create_connection((self.host, self.port))
+        self.sock = socket.create_connection((self.host, self.port))
 
     def close(self):
-        self.s.close()
+        self.sock.close()
 
     def auth(self):
         xml = self.request(request_template('<auth1/>'))
         reply1 = ET.fromstring(xml)
         nonce = reply1.find('nonce').text
-        m = hashlib.md5()
+        hsh = hashlib.md5()
         # md5(nonce+password) for the second reply
-        m.update(nonce.encode('utf-8'))
-        m.update(self.password.encode('utf-8'))
-        md5noncepwd = m.hexdigest()
+        hsh.update(nonce.encode('utf-8'))
+        hsh.update(self.password.encode('utf-8'))
+        md5noncepwd = hsh.hexdigest()
         xml2 = self.request(request_template('<auth2>'
                                              '<nonce_hash>'
                                              '{}'
                                              '</nonce_hash>'
                                              '</auth2>'.format(md5noncepwd)))
         reply2 = ET.fromstring(xml2)
-        #TODO Error if not 'authorized' 
+        #TODO Error if not 'authorized'
         print(reply2[0].tag)
-        
+
     def request(self, data):
-        self.s.sendall(data)
+        self.sock.sendall(data)
         # [:-1] removes b'\x03' from boinc responce
-        return self.s.recv(8192)[:-1]
+        return self.sock.recv(8192)[:-1]
 
     def get_host_info(self):
-        #xml = self.request(request_template('<get_host_info/>'))
-        #return ET.fromstring(xml)
-        # Rewrite using ET
         xml = ET.Element('boinc_gui_rpc_request')
         sub_el = ET.SubElement(xml, 'get_host_info')
-        #xml = ET.tostring(xml) + b'\003'
         result = self.request(ET.tostring(xml) + b'\003')
         return ET.fromstring(result)
-        
 
     def exchange_versions(self):
         xml = self.request(request_template('<exchange_versions>'
