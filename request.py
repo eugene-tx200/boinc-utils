@@ -51,7 +51,7 @@ class Request():
 
     def get_host_info(self):
         xml = ET.Element('boinc_gui_rpc_request')
-        sub_el = ET.SubElement(xml, 'get_host_info')
+        ET.SubElement(xml, 'get_host_info')
         result = self.request(ET.tostring(xml) + b'\003')
         return ET.fromstring(result)
 
