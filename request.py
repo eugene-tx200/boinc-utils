@@ -52,8 +52,8 @@ class Request():
     def get_host_info(self):
         xml = ET.Element('boinc_gui_rpc_request')
         ET.SubElement(xml, 'get_host_info')
-        result = self.request(ET.tostring(xml) + b'\003')
-        return ET.fromstring(result)
+        xml_str = self.request(ET.tostring(xml) + b'\003')
+        return ET.fromstring(xml_str)
 
     def exchange_versions(self):
         xml = self.request(request_template('<exchange_versions>'
@@ -64,8 +64,11 @@ class Request():
         return ET.fromstring(xml)
 
     def get_state(self):
-        xml = self.request(request_template('<get_state/>'))
-        return ET.fromstring(xml)
+        #xml = self.request(request_template('<get_state/>'))
+        xml = ET.Element('boinc_gui_rpc_request')
+        ET.SubElement(xml, 'get_state')
+        xml_str = self.request(ET.tostring(xml) + b'\003')
+        return ET.fromstring(xml_str)
 
     def acct_mgr_info(self):
         self.auth()
