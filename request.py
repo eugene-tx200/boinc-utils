@@ -69,8 +69,10 @@ class Request():
 
     def acct_mgr_info(self):
         self.auth()
-        xml = self.request(request_template('<acct_mgr_info/>'))
-        return ET.fromstring(xml)
+        xml = ET.Element('boinc_gui_rpc_request')
+        ET.SubElement(xml, 'acct_mgr_info')
+        xml_str = self.request(ET.tostring(xml) + b'\003')
+        return ET.fromstring(xml_str)
 
     def acct_mgr_attach(self, url, name, password):
         self.auth()
