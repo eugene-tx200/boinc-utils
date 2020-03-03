@@ -56,15 +56,12 @@ class Request():
         return ET.fromstring(xml_str)
 
     def exchange_versions(self):
-        xml = self.request(request_template('<exchange_versions>'
-                                            '<major></major>'
-                                            '<minor></minor>'
-                                            '<release></release>'
-                                            '</exchange_versions>'))
-        return ET.fromstring(xml)
+        xml = ET.Element('boinc_gui_rpc_request')
+        ET.SubElement(xml, 'exchange_versions')
+        xml_str = self.request(ET.tostring(xml) + b'\003')
+        return ET.fromstring(xml_str)
 
     def get_state(self):
-        #xml = self.request(request_template('<get_state/>'))
         xml = ET.Element('boinc_gui_rpc_request')
         ET.SubElement(xml, 'get_state')
         xml_str = self.request(ET.tostring(xml) + b'\003')
@@ -84,6 +81,6 @@ class Request():
                         f'<name>{name}</name>'
                         f'<password>{password}</password>'
                         f'</acct_mgr_rpc>')
-        xml = self.request(request_template(xml_template))
+        #xml = self.request(request_template(xml_template))
         # Stopped because of rewrite using xml.ET
         pass
