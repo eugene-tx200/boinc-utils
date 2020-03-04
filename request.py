@@ -27,20 +27,32 @@ class Request():
         self.sock.close()
 
     def auth(self):
-        xml = self.request(request_template('<auth1/>'))
-        reply1 = ET.fromstring(xml)
+        #xml = ET.Element('boinc_gui_rpc_request')
+        #ET.SubElement(xml, 'auth1')
+        #request1 = self.request(ET.tostring(xml) + b'\003')
+        #
+        # Found a strange quirk:
+        # <boinc_gui_rpc_request><auth1/></boinc_gui_rpc_request>\003
+        # >>>> Works
+        # but the same element with the space before '/'
+        # <boinc_gui_rpc_request><auth1 /></boinc_gui_rpc_request>\003
+        # >>>> Not Works
+        xml = b'<boinc_gui_rpc_request><auth1/></boinc_gui_rpc_request>\003'
+        request1 = self.request(xml)
+        reply1 = ET.fromstring(request1)
+        ET.dump(reply1)
         nonce = reply1.find('nonce').text
         hsh = hashlib.md5()
         # md5(nonce+password) for the second reply
         hsh.update(nonce.encode('utf-8'))
         hsh.update(self.password.encode('utf-8'))
         md5noncepwd = hsh.hexdigest()
-        xml2 = self.request(request_template('<auth2>'
-                                             '<nonce_hash>'
-                                             '{}'
-                                             '</nonce_hash>'
-                                             '</auth2>'.format(md5noncepwd)))
-        reply2 = ET.fromstring(xml2)
+        xml_root = ET.Element('boinc_gui_rpc_request')
+        xml_sub_auth = ET.SubElement(xml_root, 'auth2')
+        xml_sub_hash = ET.SubElement(xml_sub_auth, 'nonce_hash')
+        xml_sub_hash.text = md5noncepwd
+        request2 = self.request(ET.tostring(xml_root) + b'\003')
+        reply2 = ET.fromstring(request2)
         #TODO Error if not 'authorized'
         print(reply2[0].tag)
 
