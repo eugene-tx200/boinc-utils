@@ -11,16 +11,10 @@ class Request():
         self.password = password
 
     def __enter__(self):
-        self.connect()
+        self.sock = socket.create_connection((self.host, self.port))
 
     def __exit__(self, x_type, value, traceback):
         # Check socket documentation for possible exceptions
-        self.close()
-
-    def connect(self):
-        self.sock = socket.create_connection((self.host, self.port))
-
-    def close(self):
         self.sock.close()
 
     def auth(self):
