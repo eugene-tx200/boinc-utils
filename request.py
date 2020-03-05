@@ -2,9 +2,6 @@ import socket
 import xml.etree.ElementTree as ET
 import hashlib
 
-def request_template(req):
-    xml = '<boinc_gui_rpc_request>{}</boinc_gui_rpc_request>\003'.format(req)
-    return bytes(xml, 'utf-8')
 
 class Request():
     def __init__(self, host='localhost', port=31416, password=False):
