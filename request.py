@@ -31,7 +31,6 @@ class Request():
         xml = b'<boinc_gui_rpc_request><auth1/></boinc_gui_rpc_request>\003'
         request1 = self.request(xml)
         reply1 = ET.fromstring(request1)
-        ET.dump(reply1)
         nonce = reply1.find('nonce').text
         hsh = hashlib.md5()
         # md5(nonce+password) for the second reply
@@ -42,40 +41,46 @@ class Request():
         xml_sub_auth = ET.SubElement(xml_root, 'auth2')
         xml_sub_hash = ET.SubElement(xml_sub_auth, 'nonce_hash')
         xml_sub_hash.text = md5noncepwd
-        request2 = self.request(ET.tostring(xml_root) + b'\003')
-        reply2 = ET.fromstring(request2)
+        reply2 = self.request(xml_root)
+        #reply2 = ET.fromstring(request2)
         #TODO Error if not 'authorized'
-        print(reply2[0].tag)
 
     def request(self, data):
+        # Convert xml to bytes
+        if type(data) == str:
+            data = bytes(data, 'utf8')
+        elif type(data) == ET.Element:
+            data = ET.tostring(data)
+        # Add closing tag
+        data += b'\003'
         self.sock.sendall(data)
-        # [:-1] removes b'\x03' from boinc responce
+        # [:-1] removes closing tag '\x03' from boinc responce
         return self.sock.recv(8192)[:-1]
 
     def get_host_info(self):
         xml = ET.Element('boinc_gui_rpc_request')
         ET.SubElement(xml, 'get_host_info')
-        xml_str = self.request(ET.tostring(xml) + b'\003')
-        return ET.fromstring(xml_str)
+        reply = self.request(xml)
+        return ET.fromstring(reply)
 
     def exchange_versions(self):
         xml = ET.Element('boinc_gui_rpc_request')
         ET.SubElement(xml, 'exchange_versions')
-        xml_str = self.request(ET.tostring(xml) + b'\003')
-        return ET.fromstring(xml_str)
+        reply = self.request(xml)
+        return ET.fromstring(reply)
 
     def get_state(self):
         xml = ET.Element('boinc_gui_rpc_request')
         ET.SubElement(xml, 'get_state')
-        xml_str = self.request(ET.tostring(xml) + b'\003')
-        return ET.fromstring(xml_str)
+        reply = self.request(xml)
+        return ET.fromstring(reply)
 
     def acct_mgr_info(self):
         self.auth()
         xml = ET.Element('boinc_gui_rpc_request')
         ET.SubElement(xml, 'acct_mgr_info')
-        xml_str = self.request(ET.tostring(xml) + b'\003')
-        return ET.fromstring(xml_str)
+        reply = self.request(xml)
+        return ET.fromstring(reply)
 
     def acct_mgr_attach(self, url, name, password):
         self.auth()
