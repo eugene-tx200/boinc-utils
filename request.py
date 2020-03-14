@@ -21,8 +21,8 @@ class Request():
         # First request
         xml = ET.Element('boinc_gui_rpc_request')
         ET.SubElement(xml, 'auth1')
-        request1 = self.request(xml)
-        reply1 = ET.fromstring(request1)
+        request = self.request(xml)
+        reply1 = ET.fromstring(request)
         # Second request
         nonce = reply1.find('nonce').text
         hsh = hashlib.md5()
@@ -30,11 +30,11 @@ class Request():
         hsh.update(nonce.encode('utf-8'))
         hsh.update(self.password.encode('utf-8'))
         md5noncepwd = hsh.hexdigest()
-        xml_root = ET.Element('boinc_gui_rpc_request')
-        xml_sub_auth = ET.SubElement(xml_root, 'auth2')
-        xml_sub_hash = ET.SubElement(xml_sub_auth, 'nonce_hash')
-        xml_sub_hash.text = md5noncepwd
-        reply2 = self.request(xml_root)
+        xml2 = ET.Element('boinc_gui_rpc_request')
+        xml2_auth = ET.SubElement(xml2, 'auth2')
+        xml2_hash = ET.SubElement(xml2_auth, 'nonce_hash')
+        xml2_hash.text = md5noncepwd
+        reply2 = self.request(xml2)
         #TODO Error if not 'authorized'
 
     def request(self, data):
@@ -78,11 +78,11 @@ class Request():
 
     def acct_mgr_attach(self, url, name, password):
         self.auth()
-        xml_template = (f'<acct_mgr_rpc>'
-                        f'<url>{url}</url>'
-                        f'<name>{name}</name>'
-                        f'<password>{password}</password>'
-                        f'</acct_mgr_rpc>')
-        #xml = self.request(request_template(xml_template))
-        # Stopped because of rewrite using xml.ET
-        pass
+        xml = ET.Element('boinc_gui_rpc_request')
+        xml_amr = ET.SubElement(xml, 'acct_mgr_rpc')
+        xml_url = ET.SubElement(xml_amr, 'url')
+        xml_name = ET.SubElement(xml_amr, 'name') 
+        xml_pwd = ET.SubElement(xml_amr, 'password')
+        xml_url.text, xml_name.text, xml_pwd.text = url, name, password 
+        reply = self.request(xml)
+        return ET.fromstring(reply)

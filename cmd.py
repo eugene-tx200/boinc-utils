@@ -59,4 +59,8 @@ if args.acct_mgr_info:
         print_child(data)
 
 if args.acct_mgr_attach:
-    print(args.acct_mgr_attach)
+    r = Request(HOST, PORT, PASSWORD)
+    with r:
+        url, name, password = args.acct_mgr_attach
+        data = r.acct_mgr_attach(url, name, password)
+        print_child(data)
