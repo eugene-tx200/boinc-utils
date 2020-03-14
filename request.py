@@ -18,19 +18,12 @@ class Request():
         self.sock.close()
 
     def auth(self):
-        #xml = ET.Element('boinc_gui_rpc_request')
-        #ET.SubElement(xml, 'auth1')
-        #request1 = self.request(ET.tostring(xml) + b'\003')
-        #
-        # Found a strange quirk:
-        # <boinc_gui_rpc_request><auth1/></boinc_gui_rpc_request>\003
-        # >>>> Works
-        # but the same element with the space before '/'
-        # <boinc_gui_rpc_request><auth1 /></boinc_gui_rpc_request>\003
-        # >>>> Not Works
-        xml = b'<boinc_gui_rpc_request><auth1/></boinc_gui_rpc_request>\003'
+        # First request
+        xml = ET.Element('boinc_gui_rpc_request')
+        ET.SubElement(xml, 'auth1')
         request1 = self.request(xml)
         reply1 = ET.fromstring(request1)
+        # Second request
         nonce = reply1.find('nonce').text
         hsh = hashlib.md5()
         # md5(nonce+password) for the second reply
@@ -42,7 +35,6 @@ class Request():
         xml_sub_hash = ET.SubElement(xml_sub_auth, 'nonce_hash')
         xml_sub_hash.text = md5noncepwd
         reply2 = self.request(xml_root)
-        #reply2 = ET.fromstring(request2)
         #TODO Error if not 'authorized'
 
     def request(self, data):
@@ -51,6 +43,8 @@ class Request():
             data = bytes(data, 'utf8')
         elif type(data) == ET.Element:
             data = ET.tostring(data)
+        # Remove spaces before /
+        data = data.replace(b' /', b'/')
         # Add closing tag
         data += b'\003'
         self.sock.sendall(data)
