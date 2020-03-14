@@ -85,4 +85,8 @@ class Request():
         xml_pwd = ET.SubElement(xml_amr, 'password')
         xml_url.text, xml_name.text, xml_pwd.text = url, name, password 
         reply = self.request(xml)
-        return ET.fromstring(reply)
+        # Second request to get results from first request
+        xml2 = ET.Element('boinc_gui_rpc_request')
+        ET.SubElement(xml, 'acct_mgr_rpc_poll')
+        reply2 = self.request(xml2)
+        return ET.fromstring(reply2)
