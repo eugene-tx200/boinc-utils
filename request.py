@@ -11,7 +11,7 @@ class Request():
         self.host = host
         self.port = port
         self.sock = None
-        #TODO: Read password from /etc
+        # TODO: Read password from /etc
         self.password = password
 
     def __enter__(self):
@@ -26,8 +26,7 @@ class Request():
     def auth(self):
         """Authenticate in boinc client."""
         # First request
-        xml = ET.Element('boinc_gui_rpc_request')
-        ET.SubElement(xml, 'auth1')
+        xml = ET.Element('auth1')
         request = self.request(xml)
         reply1 = ET.fromstring(request)
         # Second request
@@ -37,71 +36,63 @@ class Request():
         hsh.update(nonce.encode('utf-8'))
         hsh.update(self.password.encode('utf-8'))
         md5noncepwd = hsh.hexdigest()
-        xml2 = ET.Element('boinc_gui_rpc_request')
-        xml2_auth = ET.SubElement(xml2, 'auth2')
-        xml2_hash = ET.SubElement(xml2_auth, 'nonce_hash')
+        xml2 = ET.Element('auth2')
+        xml2_hash = ET.SubElement(xml2, 'nonce_hash')
         xml2_hash.text = md5noncepwd
         #reply2 = self.request(xml2)
         self.request(xml2)
-        #TODO Error if not 'authorized'
+        # TODO Error if not 'authorized'
 
     def request(self, data):
         """Send request to boinc client and return responce."""
-        # Convert xml to bytes
+        xml = ET.Element('boinc_gui_rpc_request')
+        # Convert data to ET
         if isinstance(data, str):
-            data = bytes(data, 'utf8')
-        elif isinstance(data, ET.Element):
-            data = ET.tostring(data)
-        # Remove spaces before /
-        data = data.replace(b' /', b'/')
+            data = ET.fromstring(data)
+        xml.append(data)
+        xml_str = ET.tostring(xml)
+        xml_str = xml_str.replace(b' /', b'/')
         # Add closing tag
-        data += b'\003'
-        self.sock.sendall(data)
+        xml_str += b'\003'
+        self.sock.sendall(xml_str)
         # [:-1] removes closing tag '\x03' from boinc responce
         return self.sock.recv(8192)[:-1]
 
     def get_host_info(self):
         """Get information about host hardware and usage."""
-        xml = ET.Element('boinc_gui_rpc_request')
-        ET.SubElement(xml, 'get_host_info')
+        xml = ET.Element('get_host_info')
         reply = self.request(xml)
         return ET.fromstring(reply)
 
     def exchange_versions(self):
         """Get the version of the running core client."""
-        xml = ET.Element('boinc_gui_rpc_request')
-        ET.SubElement(xml, 'exchange_versions')
+        xml = ET.Element('exchange_versions')
         reply = self.request(xml)
         return ET.fromstring(reply)
 
     def get_state(self):
         """Get the entire state of the running client."""
-        xml = ET.Element('boinc_gui_rpc_request')
-        ET.SubElement(xml, 'get_state')
+        xml = ET.Element('get_state')
         reply = self.request(xml)
         return ET.fromstring(reply)
 
     def acct_mgr_info(self):
         """Retrieve account manager information."""
         self.auth()
-        xml = ET.Element('boinc_gui_rpc_request')
-        ET.SubElement(xml, 'acct_mgr_info')
+        xml = ET.Element('acct_mgr_info')
         reply = self.request(xml)
         return ET.fromstring(reply)
 
     def acct_mgr_attach(self, url, name, password):
         """Make an rpc to an account manager."""
         self.auth()
-        xml = ET.Element('boinc_gui_rpc_request')
-        xml_amr = ET.SubElement(xml, 'acct_mgr_rpc')
-        xml_url = ET.SubElement(xml_amr, 'url')
-        xml_name = ET.SubElement(xml_amr, 'name')
-        xml_pwd = ET.SubElement(xml_amr, 'password')
+        xml = ET.Element('acct_mgr_rpc')
+        xml_url = ET.SubElement(xml, 'url')
+        xml_name = ET.SubElement(xml, 'name')
+        xml_pwd = ET.SubElement(xml, 'password')
         xml_url.text, xml_name.text, xml_pwd.text = url, name, password
-        #reply = self.request(xml)
         self.request(xml)
         # Second request to get results from first request
-        xml2 = ET.Element('boinc_gui_rpc_request')
-        ET.SubElement(xml, 'acct_mgr_rpc_poll')
+        xml2 = ET.Element('acct_mgr_rpc_poll')
         reply2 = self.request(xml2)
         return ET.fromstring(reply2)
