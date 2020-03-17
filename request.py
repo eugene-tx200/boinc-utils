@@ -7,20 +7,14 @@ import hashlib
 class Request():
     """Request class is used to interact with boinc client."""
     def __init__(self, host='localhost', port=31416, password=False):
-        """ Request class constructor."""
+        """ Class constructor. Open socket connection."""
         self.host = host
         self.port = port
-        self.sock = None
-        # TODO: Read password from /etc
         self.password = password
+        self.sock = socket.create_connection((host, port))
 
-    def __enter__(self):
-        """Create socket connection."""
-        self.sock = socket.create_connection((self.host, self.port))
-
-    def __exit__(self, x_type, value, traceback):
-        """Close socket connection."""
-        # Check socket documentation for possible exceptions
+    def __del__(self):
+        """Class desructor. Close socket connection."""
         self.sock.close()
 
     def auth(self):
