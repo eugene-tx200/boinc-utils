@@ -77,6 +77,13 @@ class Request():
         reply = self.request(xml)
         return ET.fromstring(reply)
 
+    def get_project_init_status(self):
+        self.auth()
+        """ Get the contents of the project_init.xml file if present"""
+        xml = ET.Element('get_project_init_status')
+        reply = self.request(xml)
+        return ET.fromstring(reply)
+
     def acct_mgr_attach(self, url, name, password):
         """Make an rpc to an account manager."""
         self.auth()

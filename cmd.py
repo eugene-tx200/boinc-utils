@@ -25,8 +25,12 @@ parser.add_argument('--get_state', help='show entire state',
                     action='store_true')
 parser.add_argument('--acct_mgr_info', help='show current account manager info',
                     action='store_true')
+parser.add_argument('--get_project_status',
+                    help='show status of all attached projects',
+                    action='store_true')
 parser.add_argument('--acct_mgr_attach', nargs=3, help='attach to account manager',
                     metavar=('URL', 'name', 'password'))
+
 args = parser.parse_args()
 
 if args.get_host_info:
@@ -45,7 +49,11 @@ if args.acct_mgr_info:
     req = Request(host, port, password)
     print_child(req.acct_mgr_info())
 
-if args.acct_mgr_attach:
+if args.get_project_status:
     req = Request(host, port, password)
-    url, name, password = args.acct_mgr_attach
-    print_child(req.acct_mgr_attach(url, name, password))
+    print_child(req.get_project_init_status())
+
+if args.acct_mgr_attach:
+    url, name, input_pwd = args.acct_mgr_attach
+    req = Request(host, port, password)
+    print_child(req.acct_mgr_attach(url, name, input_pwd))
