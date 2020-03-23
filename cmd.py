@@ -3,11 +3,6 @@ import argparse
 from request import Request
 
 
-host = 'localhost'
-port = 31416
-# Password stored in /etc/boinc-client/gui_rpc_auth.cfg
-password = 'G3d2H5z1M7'
-
 def print_child(et):
     """Print key: value from xml.etree.ElementTree."""
     for child in et:
@@ -15,8 +10,23 @@ def print_child(et):
         if child:
             print_child(child)
 
+def get_password():
+    """Function that read config file(s) and return password or None."""
+    path = '/etc/boinc-client/gui_rpc_auth.cfg'
+    try:
+        with open(path) as file:
+            return file.read()
+    except FileNotFoundError:
+        print('Warning: No such file or directory:', path)
+    except PermissionError:
+        print('Warning: Permission denied:', path)
+    return False
 
 parser = argparse.ArgumentParser(allow_abbrev=False)
+parser.add_argument('--host', metavar='hostname[:port]',
+                    help='connect to hostname')
+parser.add_argument('--passwd', metavar='password',
+                    help='password for RPC authentication')
 parser.add_argument('--get_host_info', help='show host info',
                     action='store_true')
 parser.add_argument('--client_version', help='show client version',
@@ -28,10 +38,24 @@ parser.add_argument('--acct_mgr_info', help='show current account manager info',
 parser.add_argument('--get_project_status',
                     help='show status of all attached projects',
                     action='store_true')
-parser.add_argument('--acct_mgr_attach', nargs=3, help='attach to account manager',
+parser.add_argument('--acct_mgr_attach', nargs=3,
+                    help='attach to account manager',
                     metavar=('URL', 'name', 'password'))
 
 args = parser.parse_args()
+
+host = 'localhost'
+port = 31416
+if args.host:
+    input = args.host.partition(':')    # ('host', ':', 'port')
+    host = input[0]
+    if input[2].isdigit():
+        port = input[2]
+
+if args.passwd:
+    password = args.passwd
+else:
+    password = get_password()
 
 if args.get_host_info:
     req = Request(host, port)
