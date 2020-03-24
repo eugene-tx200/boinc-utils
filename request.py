@@ -63,18 +63,21 @@ class Request():
 
     def get_host_info(self):
         """Get information about host hardware and usage."""
+        self.auth()
         xml = ET.Element('get_host_info')
         reply = self.request(xml)
         return ET.fromstring(reply)
 
     def exchange_versions(self):
         """Get the version of the running core client."""
+        self.auth()
         xml = ET.Element('exchange_versions')
         reply = self.request(xml)
         return ET.fromstring(reply)
 
     def get_state(self):
         """Get the entire state of the running client."""
+        self.auth()
         xml = ET.Element('get_state')
         reply = self.request(xml)
         return ET.fromstring(reply)

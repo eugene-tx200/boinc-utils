@@ -58,15 +58,15 @@ else:
     password = get_password()
 
 if args.get_host_info:
-    req = Request(host, port)
+    req = Request(host, port, password)
     print_child(req.get_host_info())
 
 if args.client_version:
-    req = Request(host, port)
+    req = Request(host, port, password)
     print_child(req.exchange_versions())
 
 if args.get_state:
-    req = Request(host, port)
+    req = Request(host, port, password)
     print_child(req.get_state())
 
 if args.acct_mgr_info:
