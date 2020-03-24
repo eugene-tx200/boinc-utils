@@ -2,6 +2,7 @@
 import socket
 import xml.etree.ElementTree as ET
 import hashlib
+import sys
 
 
 class Request():
@@ -11,11 +12,19 @@ class Request():
         self.host = host
         self.port = port
         self.password = password
-        self.sock = socket.create_connection((host, port))
+        self.sock = None
+        try:
+            self.sock = socket.create_connection((host, port), 5)
+        except TimeoutError:
+            #print('Error: Connection timed out')
+            sys.exit('Error: Connection timed out')
+        except ConnectionRefusedError:
+            sys.exit('Error: Connection refused')
 
     def __del__(self):
         """Class desructor. Close socket connection."""
-        self.sock.close()
+        if self.sock:
+            self.sock.close()
 
     def auth(self):
         """Authenticate in boinc client."""
