@@ -61,7 +61,7 @@ class Request():
         #print('Request:', xml_str)
         self.sock.sendall(xml_str)
         # [:-1] removes closing tag '\x03' from boinc responce
-        responce = self.sock.recv(8192)[:-1]
+        responce = self.sock.recv(65536)[:-1]
         #print('Responce:', responce)
         return responce
 
