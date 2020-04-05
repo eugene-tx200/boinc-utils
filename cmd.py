@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 import argparse
+import sys
+import xml.etree.ElementTree as ET
 from request import Request
 
 
 def print_child(et):
     """Print key: value from xml.etree.ElementTree."""
+    if not isinstance(et, ET.Element):
+        sys.exit('Error: Reply is not an ET object')
     for child in et:
         print('{}: {}'.format(child.tag, child.text))
         if child:
@@ -15,7 +19,7 @@ def get_password():
     path = '/etc/boinc-client/gui_rpc_auth.cfg'
     try:
         with open(path) as file:
-            return file.read()
+            return file.read().strip()
     except FileNotFoundError:
         print('Warning: No such file or directory:', path)
     except PermissionError:
@@ -47,10 +51,10 @@ args = parser.parse_args()
 host = 'localhost'
 port = 31416
 if args.host:
-    input = args.host.partition(':')    # ('host', ':', 'port')
-    host = input[0]
-    if input[2].isdigit():
-        port = input[2]
+    host_port = args.host.partition(':')    # ('host', ':', 'port')
+    host = host_port[0]
+    if host_port[2].isdigit():
+        port = host_port[2]
 
 if args.passwd:
     password = args.passwd

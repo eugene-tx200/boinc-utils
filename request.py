@@ -22,7 +22,7 @@ class Request():
             sys.exit('Error: Connection refused')
 
     def __del__(self):
-        """Class desructor. Close socket connection."""
+        """Class destructor. Close socket connection."""
         if self.sock:
             self.sock.close()
 
@@ -42,9 +42,10 @@ class Request():
         xml2 = ET.Element('auth2')
         xml2_hash = ET.SubElement(xml2, 'nonce_hash')
         xml2_hash.text = md5noncepwd
-        #reply2 = self.request(xml2)
-        self.request(xml2)
-        # TODO Error if not 'authorized'
+        request2 = self.request(xml2)
+        reply2 = ET.fromstring(request2)
+        if reply2[0].tag == 'unauthorized':
+            sys.exit('Error: Unauthorized')
 
     def request(self, data):
         """Send request to boinc client and return responce."""
@@ -57,9 +58,12 @@ class Request():
         xml_str = xml_str.replace(b' /', b'/')
         # Add closing tag
         xml_str += b'\003'
+        #print('Request:', xml_str)
         self.sock.sendall(xml_str)
         # [:-1] removes closing tag '\x03' from boinc responce
-        return self.sock.recv(8192)[:-1]
+        responce = self.sock.recv(8192)[:-1]
+        #print('Responce:', responce)
+        return responce
 
     def get_host_info(self):
         """Get information about host hardware and usage."""
