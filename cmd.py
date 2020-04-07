@@ -46,42 +46,46 @@ parser.add_argument('--acct_mgr_attach', nargs=3,
                     help='attach to account manager',
                     metavar=('URL', 'name', 'password'))
 
-args = parser.parse_args()
-
-host = 'localhost'
-port = 31416
-if args.host:
-    host_port = args.host.partition(':')    # ('host', ':', 'port')
-    host = host_port[0]
-    if host_port[2].isdigit():
-        port = host_port[2]
-
-if args.passwd:
-    password = args.passwd
-else:
-    password = get_password()
-
-if args.get_host_info:
-    req = Request(host, port, password)
-    print_child(req.get_host_info())
-
-if args.client_version:
-    req = Request(host, port, password)
-    print_child(req.exchange_versions())
-
-if args.get_state:
-    req = Request(host, port, password)
-    print_child(req.get_state())
-
-if args.acct_mgr_info:
-    req = Request(host, port, password)
-    print_child(req.acct_mgr_info())
-
-if args.get_project_status:
-    req = Request(host, port, password)
-    print_child(req.get_project_init_status())
-
-if args.acct_mgr_attach:
-    url, name, input_pwd = args.acct_mgr_attach
-    req = Request(host, port, password)
-    print_child(req.acct_mgr_attach(url, name, input_pwd))
+if __name__ == '__main__':
+    args = parser.parse_args()
+    host = 'localhost'
+    port = 31416
+    if args.host:
+        host_port = args.host.partition(':')    # ('host', ':', 'port')
+        host = host_port[0]
+        if host_port[2].isdigit():
+            port = host_port[2]
+    if args.passwd:
+        password = args.passwd
+    else:
+        password = get_password()
+    # Try for Reqest common exceptions
+    try:
+        if args.get_host_info:
+            req = Request(host, port, password)
+            print_child(req.get_host_info())
+        if args.client_version:
+            req = Request(host, port, password)
+            print_child(req.exchange_versions())
+        if args.get_state:
+            req = Request(host, port, password)
+            print_child(req.get_state())
+        if args.acct_mgr_info:
+            req = Request(host, port, password)
+            print_child(req.acct_mgr_info())
+        if args.get_project_status:
+            req = Request(host, port, password)
+            print_child(req.get_project_init_status())
+        if args.acct_mgr_attach:
+            url, name, input_pwd = args.acct_mgr_attach
+            req = Request(host, port, password)
+            print_child(req.acct_mgr_attach(url, name, input_pwd))
+    # Catch Request common exceptions
+    except OSError as e:
+        sys.exit('Error: ' + str(e))
+    except TimeoutError:
+        sys.exit('Error: Connection timed out')
+    except ConnectionRefusedError:
+        sys.exit('Error: Connection refused')
+    except RuntimeError as e:
+        sys.exit('Error: ' + str(e))

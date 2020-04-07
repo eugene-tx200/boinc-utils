@@ -8,26 +8,13 @@ import sys
 class Request():
     """Request class is used to interact with boinc client."""
     def __init__(self, host='localhost', port=31416, password=False):
-        """ Class constructor. Open socket connection."""
-        self.host = host
-        self.port = port
-        self.password = password
+        """Create socket connection and authenticate in boinc client."""
         self.sock = None
-        try:
-            self.sock = socket.create_connection((host, port), 5)
-        except TimeoutError:
-            #print('Error: Connection timed out')
-            sys.exit('Error: Connection timed out')
-        except ConnectionRefusedError:
-            sys.exit('Error: Connection refused')
-
-    def __del__(self):
-        """Class destructor. Close socket connection."""
-        if self.sock:
-            self.sock.close()
-
-    def auth(self):
-        """Authenticate in boinc client."""
+        # Can cause at least TimeoutError, ConnectionRefusedError exceptions
+        self.sock = socket.create_connection((host, port), 5)
+        if not self.sock:
+            raise RuntimeError('Missing socket')
+        # Authenticate in boinc client
         # First request
         xml = ET.Element('auth1')
         request = self.request(xml)
@@ -37,7 +24,7 @@ class Request():
         hsh = hashlib.md5()
         # md5(nonce+password) for the second reply
         hsh.update(nonce.encode('utf-8'))
-        hsh.update(self.password.encode('utf-8'))
+        hsh.update(password.encode('utf-8'))
         md5noncepwd = hsh.hexdigest()
         xml2 = ET.Element('auth2')
         xml2_hash = ET.SubElement(xml2, 'nonce_hash')
@@ -45,7 +32,12 @@ class Request():
         request2 = self.request(xml2)
         reply2 = ET.fromstring(request2)
         if reply2[0].tag == 'unauthorized':
-            sys.exit('Error: Unauthorized')
+            raise RuntimeError('Unauthorized')
+
+    def __del__(self):
+        """Close socket connection."""
+        if self.sock:
+            self.sock.close()
 
     def request(self, data):
         """Send request to boinc client and return responce."""
@@ -67,34 +59,29 @@ class Request():
 
     def get_host_info(self):
         """Get information about host hardware and usage."""
-        self.auth()
         xml = ET.Element('get_host_info')
         reply = self.request(xml)
         return ET.fromstring(reply)
 
     def exchange_versions(self):
         """Get the version of the running core client."""
-        self.auth()
         xml = ET.Element('exchange_versions')
         reply = self.request(xml)
         return ET.fromstring(reply)
 
     def get_state(self):
         """Get the entire state of the running client."""
-        self.auth()
         xml = ET.Element('get_state')
         reply = self.request(xml)
         return ET.fromstring(reply)
 
     def acct_mgr_info(self):
         """Retrieve account manager information."""
-        self.auth()
         xml = ET.Element('acct_mgr_info')
         reply = self.request(xml)
         return ET.fromstring(reply)
 
     def get_project_init_status(self):
-        self.auth()
         """ Get the contents of the project_init.xml file if present"""
         xml = ET.Element('get_project_init_status')
         reply = self.request(xml)
@@ -102,7 +89,6 @@ class Request():
 
     def acct_mgr_attach(self, url, name, password):
         """Make an rpc to an account manager."""
-        self.auth()
         xml = ET.Element('acct_mgr_rpc')
         xml_url = ET.SubElement(xml, 'url')
         xml_name = ET.SubElement(xml, 'name')
