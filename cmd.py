@@ -63,19 +63,19 @@ if __name__ == '__main__':
     try:
         if args.get_host_info:
             req = Request(host, port, password)
-            print_child(req.get_host_info())
+            print_child(req.simple_request('get_host_info'))
         if args.client_version:
             req = Request(host, port, password)
-            print_child(req.exchange_versions())
+            print_child(req.simple_request('exchange_versions'))
         if args.get_state:
             req = Request(host, port, password)
-            print_child(req.get_state())
+            print_child(req.simple_request('get_state'))
         if args.acct_mgr_info:
             req = Request(host, port, password)
-            print_child(req.acct_mgr_info())
+            print_child(req.simple_request('acct_mgr_info'))
         if args.get_project_status:
             req = Request(host, port, password)
-            print_child(req.get_project_init_status())
+            print_child(req.simple_request('get_project_init_status'))
         if args.acct_mgr_attach:
             url, name, input_pwd = args.acct_mgr_attach
             req = Request(host, port, password)

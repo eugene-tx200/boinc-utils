@@ -2,11 +2,11 @@
 import socket
 import xml.etree.ElementTree as ET
 import hashlib
-import sys
 
 
 class Request():
     """Request class is used to interact with boinc client."""
+
     def __init__(self, host='localhost', port=31416, password=False):
         """Create socket connection and authenticate in boinc client."""
         self.sock = None
@@ -16,9 +16,7 @@ class Request():
             raise RuntimeError('Missing socket')
         # Authenticate in boinc client
         # First request
-        xml = ET.Element('auth1')
-        request = self.request(xml)
-        reply1 = ET.fromstring(request)
+        reply1 = self.simple_request('auth1')
         # Second request
         nonce = reply1.find('nonce').text
         hsh = hashlib.md5()
@@ -57,33 +55,16 @@ class Request():
         #print('Responce:', responce)
         return responce
 
-    def get_host_info(self):
-        """Get information about host hardware and usage."""
-        xml = ET.Element('get_host_info')
-        reply = self.request(xml)
-        return ET.fromstring(reply)
+    def simple_request(self, element):
+        """Request template for simple requests.
 
-    def exchange_versions(self):
-        """Get the version of the running core client."""
-        xml = ET.Element('exchange_versions')
-        reply = self.request(xml)
-        return ET.fromstring(reply)
-
-    def get_state(self):
-        """Get the entire state of the running client."""
-        xml = ET.Element('get_state')
-        reply = self.request(xml)
-        return ET.fromstring(reply)
-
-    def acct_mgr_info(self):
-        """Retrieve account manager information."""
-        xml = ET.Element('acct_mgr_info')
-        reply = self.request(xml)
-        return ET.fromstring(reply)
-
-    def get_project_init_status(self):
-        """ Get the contents of the project_init.xml file if present"""
-        xml = ET.Element('get_project_init_status')
+        Send simple request:
+        <boinc_gui_rpc_request>
+          <{{ element }}/>
+        </boinc_gui_rpc_request>\003
+        Return is an ET object
+        """
+        xml = ET.Element(element)
         reply = self.request(xml)
         return ET.fromstring(reply)
 
