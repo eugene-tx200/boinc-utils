@@ -2,7 +2,17 @@
 import socket
 import xml.etree.ElementTree as ET
 import hashlib
+from time import sleep
 
+
+class RequestValueError(ValueError):
+    """Provided value(s) is invalid """
+
+def req_find(el_tree, tag):
+    """ Search recursivly Element tree and return first match or None"""
+    for el in el_tree.iter(tag):
+        return el
+    return None
 
 class Request():
     """Request class is used to interact with boinc client."""
@@ -77,6 +87,41 @@ class Request():
         xml_url.text, xml_name.text, xml_pwd.text = url, name, password
         self.request(xml)
         # Second request to get results from first request
-        xml2 = ET.Element('acct_mgr_rpc_poll')
-        reply2 = self.request(xml2)
-        return ET.fromstring(reply2)
+        reply2 = self.simple_request('acct_mgr_rpc_poll')
+        return reply2
+
+    def lookup_account(self, url, email, password):
+        """look for an account in a given project. Return auth string."""
+        # password_hash = md5(password + email.lower())
+        hsh = hashlib.md5()
+        hsh.update(password.encode('utf-8'))
+        hsh.update(email.lower().encode('utf-8'))
+        pwd_hsh = hsh.hexdigest()
+        xml = ET.Element('lookup_account')
+        xml_url = ET.SubElement(xml, 'url')
+        xml_email = ET.SubElement(xml, 'email_addr')
+        xml_pwd = ET.SubElement(xml, 'passwd_hash')
+        xml_url.text, xml_email.text, xml_pwd.text = url, email, pwd_hsh
+        self.request(xml)
+        err_dict = {'-136': 'User not found',
+                    '-203': 'Boinc client has no network connection',
+                    '-205': 'Bad email address',
+                    '-206': 'Wrong password'}
+        while True:
+            # Immediate poll after first request always returns 'in progress'
+            # Wait before first poll
+            sleep(2)
+            reply2 = self.simple_request('lookup_account_poll')
+            auth_key = req_find(reply2, 'authenticator')
+            if auth_key != None:
+                break
+            err = req_find(reply2, 'error_num')
+            if err != None:
+                err_no = err.text
+                if err_no == '-204':
+                    # '-204': Operation in progress
+                    continue
+                if err_no in err_dict.keys():
+                    raise RequestValueError(err_dict[err_no])
+            raise RuntimeError('Unknown Error ' + ET.tostring(err))
+        return auth_key.text

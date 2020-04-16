@@ -2,8 +2,7 @@
 import argparse
 import sys
 import xml.etree.ElementTree as ET
-from request import Request
-
+from request import Request, RequestValueError
 
 def print_child(et):
     """Print key: value from xml.etree.ElementTree."""
@@ -45,6 +44,10 @@ parser.add_argument('--get_project_status',
 parser.add_argument('--acct_mgr_attach', nargs=3,
                     help='attach to account manager',
                     metavar=('URL', 'name', 'password'))
+parser.add_argument('--lookup_account', nargs=3,
+                    help='look for an account in a given project '
+                    'and return auth string',
+                    metavar=('URL', 'email', 'passwd'))
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -80,6 +83,11 @@ if __name__ == '__main__':
             url, name, input_pwd = args.acct_mgr_attach
             req = Request(host, port, password)
             print_child(req.acct_mgr_attach(url, name, input_pwd))
+        if args.lookup_account:
+            url, email, input_pwd = args.lookup_account
+            req = Request(host, port, password)
+            auth_key = req.lookup_account(url, email, input_pwd)
+            print ('Authenticator: ', auth_key)
     # Catch Request common exceptions
     except OSError as e:
         sys.exit('Error: ' + str(e))
@@ -87,5 +95,5 @@ if __name__ == '__main__':
         sys.exit('Error: Connection timed out')
     except ConnectionRefusedError:
         sys.exit('Error: Connection refused')
-    except RuntimeError as e:
+    except RequestValueError as e:
         sys.exit('Error: ' + str(e))
