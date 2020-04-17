@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
+"""Utility to control boinc-client. Copycat of the boinccmd"""
 import argparse
 import sys
 import xml.etree.ElementTree as ET
 from request import Request, RequestValueError
 
-def print_child(et):
+
+HOST = 'localhost'
+PORT = 31416
+
+def print_child(el_tree):
     """Print key: value from xml.etree.ElementTree."""
-    if not isinstance(et, ET.Element):
+    if not isinstance(el_tree, ET.Element):
         sys.exit('Error: Reply is not an ET object')
-    for child in et:
-        print('{}: {}'.format(child.tag, child.text))
-        if child:
-            print_child(child)
+    for element in el_tree:
+        print('{}: {}'.format(element.tag, element.text))
+        if element:
+            print_child(element)
 
 def get_password():
     """Function that read config file(s) and return password or None."""
@@ -25,34 +30,34 @@ def get_password():
         print('Warning: Permission denied:', path)
     return False
 
-parser = argparse.ArgumentParser(allow_abbrev=False)
-parser.add_argument('--host', metavar='hostname[:port]',
-                    help='connect to hostname')
-parser.add_argument('--passwd', metavar='password',
-                    help='password for RPC authentication')
-parser.add_argument('--get_host_info', help='show host info',
-                    action='store_true')
-parser.add_argument('--client_version', help='show client version',
-                    action='store_true')
-parser.add_argument('--get_state', help='show entire state',
-                    action='store_true')
-parser.add_argument('--acct_mgr_info', help='show current account manager info',
-                    action='store_true')
-parser.add_argument('--get_project_status',
-                    help='show status of all attached projects',
-                    action='store_true')
-parser.add_argument('--acct_mgr_attach', nargs=3,
-                    help='attach to account manager',
-                    metavar=('URL', 'name', 'password'))
-parser.add_argument('--lookup_account', nargs=3,
-                    help='look for an account in a given project '
-                    'and return auth string',
-                    metavar=('URL', 'email', 'passwd'))
-
-if __name__ == '__main__':
+def main():
+    """ Main Function. Intended to run from command line"""
+    parser = argparse.ArgumentParser(allow_abbrev=False)
+    parser.add_argument('--host', metavar='hostname[:port]',
+                        help='connect to hostname')
+    parser.add_argument('--passwd', metavar='password',
+                        help='password for RPC authentication')
+    parser.add_argument('--get_host_info', help='show host info',
+                        action='store_true')
+    parser.add_argument('--client_version', help='show client version',
+                        action='store_true')
+    parser.add_argument('--get_state', help='show entire state',
+                        action='store_true')
+    parser.add_argument('--acct_mgr_info', help='show current account manager info',
+                        action='store_true')
+    parser.add_argument('--get_project_status',
+                        help='show status of all attached projects',
+                        action='store_true')
+    parser.add_argument('--acct_mgr_attach', nargs=3,
+                        help='attach to account manager',
+                        metavar=('URL', 'name', 'password'))
+    parser.add_argument('--lookup_account', nargs=3,
+                        help='look for an account in a given project '
+                        'and return auth string',
+                        metavar=('URL', 'email', 'passwd'))
     args = parser.parse_args()
-    host = 'localhost'
-    port = 31416
+    host = HOST
+    port = PORT
     if args.host:
         host_port = args.host.partition(':')    # ('host', ':', 'port')
         host = host_port[0]
@@ -86,6 +91,9 @@ if __name__ == '__main__':
             url, email, input_pwd = args.lookup_account
             req = Request(host, port, password)
             auth_key = req.lookup_account(url, email, input_pwd)
-            print ('Authenticator: ', auth_key)
-    except RequestValueError as e:
-        sys.exit('Error: ' + str(e))
+            print('Authenticator: ', auth_key)
+    except RequestValueError as exception:
+        sys.exit('Error: ' + str(exception))
+
+if __name__ == '__main__':
+    main()
