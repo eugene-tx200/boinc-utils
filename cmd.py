@@ -62,7 +62,6 @@ if __name__ == '__main__':
         password = args.passwd
     else:
         password = get_password()
-    # Try for Reqest common exceptions
     try:
         if args.get_host_info:
             req = Request(host, port, password)
@@ -88,12 +87,5 @@ if __name__ == '__main__':
             req = Request(host, port, password)
             auth_key = req.lookup_account(url, email, input_pwd)
             print ('Authenticator: ', auth_key)
-    # Catch Request common exceptions
-    except OSError as e:
-        sys.exit('Error: ' + str(e))
-    except TimeoutError:
-        sys.exit('Error: Connection timed out')
-    except ConnectionRefusedError:
-        sys.exit('Error: Connection refused')
     except RequestValueError as e:
         sys.exit('Error: ' + str(e))

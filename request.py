@@ -7,11 +7,14 @@ from time import sleep
 
 class RequestValueError(ValueError):
     """Provided value(s) is invalid """
+    def __init__(self, msg, original_exception=None):
+        super().__init__(msg)
+        self.original_exception = original_exception
 
 def req_find(el_tree, tag):
     """ Search recursivly Element tree and return first match or None"""
-    for el in el_tree.iter(tag):
-        return el
+    for element in el_tree.iter(tag):
+        return element
     return None
 
 class Request():
@@ -20,10 +23,15 @@ class Request():
     def __init__(self, host='localhost', port=31416, password=False):
         """Create socket connection and authenticate in boinc client."""
         self.sock = None
-        # Can cause at least TimeoutError, ConnectionRefusedError exceptions
-        self.sock = socket.create_connection((host, port), 5)
-        if not self.sock:
-            raise RuntimeError('Missing socket')
+        try:
+            # Can cause at least TimeoutError, ConnectionRefusedError exceptions
+            self.sock = socket.create_connection((host, port), 5)
+            if not self.sock:
+                raise RuntimeError('Missing socket')
+        except socket.timeout as orig_ex:
+            raise RequestValueError('Cannot connect to host', orig_ex)
+        except ConnectionRefusedError as orig_ex:
+            raise RequestValueError('Connection refused', orig_ex)
         # Authenticate in boinc client
         # First request
         reply1 = self.simple_request('auth1')
@@ -40,7 +48,7 @@ class Request():
         request2 = self.request(xml2)
         reply2 = ET.fromstring(request2)
         if reply2[0].tag == 'unauthorized':
-            raise RuntimeError('Unauthorized')
+            raise RequestValueError('Password incorrect')
 
     def __del__(self):
         """Close socket connection."""
@@ -103,25 +111,25 @@ class Request():
         xml_pwd = ET.SubElement(xml, 'passwd_hash')
         xml_url.text, xml_email.text, xml_pwd.text = url, email, pwd_hsh
         self.request(xml)
-        err_dict = {'-136': 'User not found',
-                    '-203': 'Boinc client has no network connection',
-                    '-205': 'Bad email address',
-                    '-206': 'Wrong password'}
+        error_dict = {'-136': 'User not found',
+                      '-203': 'Boinc client has no network connection',
+                      '-205': 'Bad email address',
+                      '-206': 'Password incorrect'}
         while True:
             # Immediate poll after first request always returns 'in progress'
             # Wait before first poll
             sleep(2)
             reply2 = self.simple_request('lookup_account_poll')
             auth_key = req_find(reply2, 'authenticator')
-            if auth_key != None:
+            if auth_key is not None:
                 break
-            err = req_find(reply2, 'error_num')
-            if err != None:
-                err_no = err.text
-                if err_no == '-204':
+            error = req_find(reply2, 'error_num')
+            if error is not None:
+                error = error.text
+                if error == '-204':
                     # '-204': Operation in progress
                     continue
-                if err_no in err_dict.keys():
-                    raise RequestValueError(err_dict[err_no])
-            raise RuntimeError('Unknown Error ' + ET.tostring(err))
+                if error in error_dict.keys():
+                    raise RequestValueError(error_dict[error])
+            raise RuntimeError('Unknown Error ' + ET.tostring(error))
         return auth_key.text
