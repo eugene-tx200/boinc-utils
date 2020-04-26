@@ -6,8 +6,8 @@ import xml.etree.ElementTree as ET
 from request import Request, RequestValueError
 
 
-HOST = 'localhost'
-PORT = 31416
+DEFAULT_HOST = 'localhost'
+DEFAULT_PORT = 31416
 
 def print_child(el_tree):
     """Print key: value from xml.etree.ElementTree."""
@@ -43,7 +43,8 @@ def main():
                         action='store_true')
     parser.add_argument('--get_state', help='show entire state',
                         action='store_true')
-    parser.add_argument('--acct_mgr_info', help='show current account manager info',
+    parser.add_argument('--acct_mgr_info',
+                        help='show current account manager info',
                         action='store_true')
     parser.add_argument('--get_project_status',
                         help='show status of all attached projects',
@@ -55,9 +56,11 @@ def main():
                         help='look for an account in a given project '
                         'and return auth string',
                         metavar=('URL', 'email', 'passwd'))
+    parser.add_argument('--project_attach', nargs=2,
+                        help='attach to project', metavar=('URL', 'auth'))
     args = parser.parse_args()
-    host = HOST
-    port = PORT
+    host = DEFAULT_HOST
+    port = DEFAULT_PORT
     if args.host:
         host_port = args.host.partition(':')    # ('host', ':', 'port')
         host = host_port[0]
@@ -82,7 +85,7 @@ def main():
             print_child(req.simple_request('acct_mgr_info'))
         if args.get_project_status:
             req = Request(host, port, password)
-            print_child(req.simple_request('get_project_init_status'))
+            print_child(req.simple_request('get_project_status'))
         if args.acct_mgr_attach:
             url, name, input_pwd = args.acct_mgr_attach
             req = Request(host, port, password)
@@ -92,6 +95,10 @@ def main():
             req = Request(host, port, password)
             auth_key = req.lookup_account(url, email, input_pwd)
             print('Authenticator: ', auth_key)
+        if args.project_attach:
+            url, auth = args.project_attach
+            req = Request(host, port, password)
+            print_child(req.project_attach(url, auth))
     except RequestValueError as exception:
         sys.exit('Error: ' + str(exception))
 

@@ -12,7 +12,7 @@ class RequestValueError(ValueError):
         self.original_exception = original_exception
 
 def req_find(el_tree, tag):
-    """ Search recursivly Element tree and return first match or None"""
+    """ Search recursively Element tree and return first match or None"""
     for element in el_tree.iter(tag):
         return element
     return None
@@ -133,3 +133,16 @@ class Request():
                     raise RequestValueError(error_dict[error])
             raise RuntimeError('Unknown Error ' + ET.tostring(error))
         return auth_key.text
+
+    def project_attach(self, url, auth):
+        """Attach to project. Return ?? or raise an error."""
+        xml = ET.Element('project_attach')
+        xml_url = ET.SubElement(xml, 'project_url')
+        xml_auth = ET.SubElement(xml, 'authenticator')
+        ET.SubElement(xml, 'project_name')
+        xml_url.text, xml_auth.text = url, auth
+        reply1 = self.request(xml)
+        print('Reply1: ', reply1)
+        reply2 = self.simple_request('project_attach_poll')
+        ET.dump(reply2)
+        return reply2
