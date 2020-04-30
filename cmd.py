@@ -37,27 +37,26 @@ def main():
                         help='connect to hostname')
     parser.add_argument('--passwd', metavar='password',
                         help='password for RPC authentication')
-    parser.add_argument('--get_host_info', help='show host info',
-                        action='store_true')
-    parser.add_argument('--client_version', help='show client version',
-                        action='store_true')
-    parser.add_argument('--get_state', help='show entire state',
-                        action='store_true')
-    parser.add_argument('--acct_mgr_info',
-                        help='show current account manager info',
-                        action='store_true')
-    parser.add_argument('--get_project_status',
-                        help='show status of all attached projects',
-                        action='store_true')
+    parser.add_argument('--get_host_info', action='store_true',
+                        help='show host info')
+    parser.add_argument('--client_version', action='store_true',
+                        help='show client version')
+    parser.add_argument('--get_state', action='store_true',
+                        help='show entire state')
+    parser.add_argument('--acct_mgr_info', action='store_true',
+                        help='show current account manager info')
+    parser.add_argument('--get_project_status', action='store_true',
+                        help='show status of all attached projects')
     parser.add_argument('--acct_mgr_attach', nargs=3,
-                        help='attach to account manager',
-                        metavar=('URL', 'name', 'password'))
+                        metavar=('URL', 'name', 'password'),
+                        help='attach to account manager')
     parser.add_argument('--lookup_account', nargs=3,
+                        metavar=('URL', 'email', 'passwd'),
                         help='look for an account in a given project '
-                        'and return auth string',
-                        metavar=('URL', 'email', 'passwd'))
-    parser.add_argument('--project_attach', nargs=2,
-                        help='attach to project', metavar=('URL', 'auth'))
+                        'and return auth string')
+    parser.add_argument('--project_attach', nargs=2, metavar=('URL', 'auth'),
+                        help='attach to project')
+
     args = parser.parse_args()
     host = DEFAULT_HOST
     port = DEFAULT_PORT
