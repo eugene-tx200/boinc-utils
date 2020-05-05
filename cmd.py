@@ -3,7 +3,7 @@
 import argparse
 import sys
 import xml.etree.ElementTree as ET
-from request import Request, RequestValueError
+from request import Request, RequestValueError, PROJECT_CHOICES
 
 
 DEFAULT_HOST = 'localhost'
@@ -30,8 +30,8 @@ def get_password():
         print('Warning: Permission denied:', path)
     return False
 
-def main():
-    """ Main Function. Intended to run from command line"""
+def get_parser():
+    """ Return parser simmilar to the boinccmd command."""
     parser = argparse.ArgumentParser(allow_abbrev=False)
     parser.add_argument('--host', metavar='hostname[:port]',
                         help='connect to hostname')
@@ -56,7 +56,13 @@ def main():
                         'and return auth string')
     parser.add_argument('--project_attach', nargs=2, metavar=('URL', 'auth'),
                         help='attach to project')
+    parser.add_argument('--project', nargs=2, metavar=('URL', 'op'),
+                        help='project operation. op = ' + str(PROJECT_CHOICES))
+    return parser
 
+def main():
+    """ Main Function. Intended to run from command line"""
+    parser = get_parser()
     args = parser.parse_args()
     host = DEFAULT_HOST
     port = DEFAULT_PORT
@@ -70,34 +76,33 @@ def main():
     else:
         password = get_password()
     try:
+        req = Request(host, port, password)
         if args.get_host_info:
-            req = Request(host, port, password)
             print_child(req.simple_request('get_host_info'))
         if args.client_version:
-            req = Request(host, port, password)
             print_child(req.simple_request('exchange_versions'))
         if args.get_state:
-            req = Request(host, port, password)
             print_child(req.simple_request('get_state'))
         if args.acct_mgr_info:
-            req = Request(host, port, password)
             print_child(req.simple_request('acct_mgr_info'))
         if args.get_project_status:
-            req = Request(host, port, password)
             print_child(req.simple_request('get_project_status'))
         if args.acct_mgr_attach:
             url, name, input_pwd = args.acct_mgr_attach
-            req = Request(host, port, password)
             print_child(req.acct_mgr_attach(url, name, input_pwd))
         if args.lookup_account:
             url, email, input_pwd = args.lookup_account
-            req = Request(host, port, password)
             auth_key = req.lookup_account(url, email, input_pwd)
             print('Authenticator: ', auth_key)
         if args.project_attach:
             url, auth = args.project_attach
-            req = Request(host, port, password)
             print_child(req.project_attach(url, auth))
+        if args.project:
+            url, command = args.project
+            if command not in PROJECT_CHOICES:
+                sys.exit('Error: Illegal op value. Possible op values: '
+                         + str(PROJECT_CHOICES))
+            print_child(req.project_command(url, command))
     except RequestValueError as exception:
         sys.exit('Error: ' + str(exception))
 

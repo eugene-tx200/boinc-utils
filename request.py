@@ -4,6 +4,10 @@ import xml.etree.ElementTree as ET
 import hashlib
 from time import sleep
 
+PROJECT_CHOICES = ('reset', 'detach', 'update', 'suspend', 'resume',
+                   'nomorework', 'allowmorework', 'detach_when_done',
+                   'dont_detach_when_done')
+
 
 class RequestValueError(ValueError):
     """Provided value(s) is invalid """
@@ -73,6 +77,32 @@ class Request():
         #print('Responce:', responce)
         return responce
 
+    def project_command(self, url, command):
+        """Reqest template for project-related requests.
+
+        Send request:
+        <boinc_gui_rpc_request>
+          <project_{{ command }}>
+            <project_url>{{ url }}</project_url>
+          </project_{{ command }}>
+        </boinc_gui_rpc_request>\003
+
+        Possible command values: 'reset', 'detach', 'update', 'suspend',
+                                 'resume', 'nomorework',
+                                 'allowmorework', 'detach_when_done',
+                                 'dont_detach_when_done'
+        Return is an ET object
+        """
+        if command not in PROJECT_CHOICES:
+            raise RequestValueError('Command has illegal value')
+        xml = ET.Element('project_' + command)
+        xml_url = ET.SubElement(xml, 'project_url')
+        xml_url.text = url
+        ET.dump(xml)
+        reply = self.request(xml)
+        print(reply)
+        return ET.fromstring(reply)
+
     def simple_request(self, element):
         """Request template for simple requests.
 
@@ -80,6 +110,7 @@ class Request():
         <boinc_gui_rpc_request>
           <{{ element }}/>
         </boinc_gui_rpc_request>\003
+
         Return is an ET object
         """
         xml = ET.Element(element)
