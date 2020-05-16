@@ -21,7 +21,7 @@
 import argparse
 import sys
 import xml.etree.ElementTree as ET
-from request import Request, RequestValueError, PROJECT_CHOICES
+from boincrpc import BoincRpc, BoincRpcError, PROJECT_CHOICES
 
 
 DEFAULT_HOST = 'localhost'
@@ -94,7 +94,7 @@ def main():
     else:
         password = get_password()
     try:
-        req = Request(host, port, password)
+        req = BoincRpc(host, port, password)
         if args.get_host_info:
             print_child(req.simple_request('get_host_info'))
         if args.client_version:
@@ -121,7 +121,7 @@ def main():
                 sys.exit('Error: Illegal op value. Possible op values: '
                          + str(PROJECT_CHOICES))
             print_child(req.project_command(url, command))
-    except RequestValueError as exception:
+    except BoincRpcError as exception:
         sys.exit('Error: ' + str(exception))
 
 if __name__ == '__main__':

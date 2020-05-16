@@ -26,7 +26,7 @@ PROJECT_CHOICES = ('reset', 'detach', 'update', 'suspend', 'resume',
                    'dont_detach_when_done')
 
 
-class RequestValueError(ValueError):
+class BoincRpcError(ValueError):
     """Provided value(s) is invalid """
     def __init__(self, msg, original_exception=None):
         super().__init__(msg)
@@ -38,8 +38,8 @@ def req_find(el_tree, tag):
         return element
     return None
 
-class Request():
-    """Request class is used to interact with boinc client."""
+class BoincRpc():
+    """BoincRpc class is used to interact with boinc client."""
 
     def __init__(self, host='localhost', port=31416, password=False):
         """Create socket connection and authenticate in boinc client."""
@@ -50,9 +50,9 @@ class Request():
             if not self.sock:
                 raise RuntimeError('Missing socket')
         except socket.timeout as orig_ex:
-            raise RequestValueError('Cannot connect to host', orig_ex)
+            raise BoincRpcError('Cannot connect to host', orig_ex)
         except ConnectionRefusedError as orig_ex:
-            raise RequestValueError('Connection refused', orig_ex)
+            raise BoincRpcError('Connection refused', orig_ex)
         # Authenticate in boinc client
         # First request
         reply1 = self.simple_request('auth1')
@@ -69,7 +69,7 @@ class Request():
         request2 = self.request(xml2)
         reply2 = ET.fromstring(request2)
         if reply2[0].tag == 'unauthorized':
-            raise RequestValueError('Password incorrect')
+            raise BoincRpcError('Password incorrect')
 
     def __del__(self):
         """Close socket connection."""
@@ -87,11 +87,9 @@ class Request():
         xml_str = xml_str.replace(b' /', b'/')
         # Add closing tag
         xml_str += b'\003'
-        #print('Request:', xml_str)
         self.sock.sendall(xml_str)
-        # [:-1] removes closing tag '\x03' from boinc responce
+        # [:-1] remove closing tag '\x03' from boinc responce
         responce = self.sock.recv(65536)[:-1]
-        #print('Responce:', responce)
         return responce
 
     def project_command(self, url, command):
@@ -111,7 +109,7 @@ class Request():
         Return is an ET object
         """
         if command not in PROJECT_CHOICES:
-            raise RequestValueError('Command has illegal value')
+            raise BoincRpcError('Command has illegal value')
         xml = ET.Element('project_' + command)
         xml_url = ET.SubElement(xml, 'project_url')
         xml_url.text = url
@@ -178,7 +176,7 @@ class Request():
                     # '-204': Operation in progress
                     continue
                 if error in error_dict.keys():
-                    raise RequestValueError(error_dict[error])
+                    raise BoincRpcError(error_dict[error])
             raise RuntimeError('Unknown Error ' + ET.tostring(error))
         return auth_key.text
 
