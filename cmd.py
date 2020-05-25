@@ -27,14 +27,20 @@ from boincrpc import BoincRpc, BoincRpcError, PROJECT_CHOICES
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 31416
 
-def print_child(el_tree):
-    """Print key: value from xml.etree.ElementTree."""
-    if not isinstance(el_tree, ET.Element):
-        sys.exit('Error: Reply is not an ET object')
-    for element in el_tree:
+def print_xml(xml):
+    """Print xml tree simmilar to boinccmd."""
+    # convert bytes to string
+    if isinstance(xml, bytes):
+        xml = xml.decode()
+    # convert string to ET object
+    if isinstance(xml, str):
+        xml = ET.fromstring(xml)
+    if not isinstance(xml, ET.Element):
+        sys.exit('Error: Reply is not a str or an ET object')
+    for element in xml:
         print('{}: {}'.format(element.tag, element.text))
         if element:
-            print_child(element)
+            print_xml(element)
 
 def get_password():
     """Function that read config file(s) and return password or None."""
@@ -96,31 +102,31 @@ def main():
     try:
         req = BoincRpc(host, port, password)
         if args.get_host_info:
-            print_child(req.simple_request('get_host_info'))
+            print_xml(req.simple_request('get_host_info'))
         if args.client_version:
-            print_child(req.simple_request('exchange_versions'))
+            print_xml(req.simple_request('exchange_versions'))
         if args.get_state:
-            print_child(req.simple_request('get_state'))
+            print_xml(req.simple_request('get_state'))
         if args.acct_mgr_info:
-            print_child(req.simple_request('acct_mgr_info'))
+            print_xml(req.simple_request('acct_mgr_info'))
         if args.get_project_status:
-            print_child(req.simple_request('get_project_status'))
+            print_xml(req.simple_request('get_project_status'))
         if args.acct_mgr_attach:
             url, name, input_pwd = args.acct_mgr_attach
-            print_child(req.acct_mgr_attach(url, name, input_pwd))
+            print_xml(req.acct_mgr_attach(url, name, input_pwd))
         if args.lookup_account:
             url, email, input_pwd = args.lookup_account
             auth_key = req.lookup_account(url, email, input_pwd)
             print('Authenticator: ', auth_key)
         if args.project_attach:
             url, auth = args.project_attach
-            print_child(req.project_attach(url, auth))
+            print_xml(req.project_attach(url, auth))
         if args.project:
             url, command = args.project
             if command not in PROJECT_CHOICES:
                 sys.exit('Error: Illegal op value. Possible op values: '
                          + str(PROJECT_CHOICES))
-            print_child(req.project_command(url, command))
+            print_xml(req.project_command(url, command))
     except BoincRpcError as exception:
         sys.exit('Error: ' + str(exception))
 

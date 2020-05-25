@@ -6,7 +6,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name="boincrpc",
-    version="0.1.1.dev1",
+    version="0.1.2.dev1",
     author="Yevhen Shyshkan",
     author_email="eugene.tx200@gmail.com",
     #license="LGPLv3+",
