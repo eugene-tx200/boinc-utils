@@ -32,7 +32,7 @@ class BoincRpcError(ValueError):
         super().__init__(msg)
         self.original_exception = original_exception
 
-def req_find(el_tree, tag):
+def et_find(el_tree, tag):
     """ Search recursively Element tree and return first match or None"""
     for element in el_tree.iter(tag):
         return element
@@ -55,11 +55,11 @@ class BoincRpc():
             raise BoincRpcError('Connection refused', orig_ex)
         # Authenticate in boinc client
         # First request
-        reply1 = ET.fromstring(self.simple_request('auth1'))
+        response1 = ET.fromstring(self.simple_request('auth1'))
         # Second request
-        nonce = reply1.find('nonce').text
+        nonce = response1.find('nonce').text
         hsh = hashlib.md5()
-        # md5(nonce+password) for the second reply
+        # md5(nonce+password) for the second response
         hsh.update(nonce.encode('utf-8'))
         hsh.update(password.encode('utf-8'))
         md5noncepwd = hsh.hexdigest()
@@ -67,8 +67,8 @@ class BoincRpc():
         xml2_hash = ET.SubElement(xml2, 'nonce_hash')
         xml2_hash.text = md5noncepwd
         request2 = self.request(xml2)
-        reply2 = ET.fromstring(request2)
-        if reply2[0].tag == 'unauthorized':
+        response2 = ET.fromstring(request2)
+        if response2[0].tag == 'unauthorized':
             raise BoincRpcError('Password incorrect')
 
     def __del__(self):
@@ -77,7 +77,7 @@ class BoincRpc():
             self.sock.close()
 
     def request(self, data):
-        """Send request to boinc client and return responce."""
+        """Send request to boinc client and return response."""
         xml = ET.Element('boinc_gui_rpc_request')
         # Convert data to ET
         if isinstance(data, str):
@@ -88,11 +88,11 @@ class BoincRpc():
         # Add closing tag
         xml_str += b'\003'
         self.sock.sendall(xml_str)
-        # [:-1] remove closing tag '\x03' from boinc responce
-        responce = self.sock.recv(65536)[:-1]
+        # [:-1] remove closing tag '\x03' from boinc response
+        response = self.sock.recv(65536)[:-1]
         #print('Request: ', xml_str)
-        #print('Responce: ', responce)
-        return responce
+        #print('Response: ', response)
+        return response
 
     def project_command(self, url, command):
         """Reqest template for project-related requests.
@@ -125,8 +125,8 @@ class BoincRpc():
         </boinc_gui_rpc_request>\003
         """
         xml = ET.Element(element)
-        reply = self.request(xml)
-        return reply
+        response = self.request(xml)
+        return response
 
     def acct_mgr_attach(self, url, name, password):
         """Make an rpc to an account manager."""
@@ -137,8 +137,8 @@ class BoincRpc():
         xml_url.text, xml_name.text, xml_pwd.text = url, name, password
         self.request(xml)
         # Second request to get results from first request
-        reply2 = self.simple_request('acct_mgr_rpc_poll')
-        return reply2
+        response2 = self.simple_request('acct_mgr_rpc_poll')
+        return response2
 
     def lookup_account(self, url, email, password):
         """look for an account in a given project. Return auth string."""
@@ -146,12 +146,12 @@ class BoincRpc():
         hsh = hashlib.md5()
         hsh.update(password.encode('utf-8'))
         hsh.update(email.lower().encode('utf-8'))
-        pwd_hsh = hsh.hexdigest()
+        hsh_pwd = hsh.hexdigest()
         xml = ET.Element('lookup_account')
         xml_url = ET.SubElement(xml, 'url')
         xml_email = ET.SubElement(xml, 'email_addr')
         xml_pwd = ET.SubElement(xml, 'passwd_hash')
-        xml_url.text, xml_email.text, xml_pwd.text = url, email, pwd_hsh
+        xml_url.text, xml_email.text, xml_pwd.text = url, email, hsh_pwd
         self.request(xml)
         error_dict = {'-136': 'User not found',
                       '-203': 'Boinc client has no network connection',
@@ -161,11 +161,12 @@ class BoincRpc():
             # Immediate poll after first request always returns 'in progress'
             # Wait before first poll
             sleep(2)
-            reply2 = ET.fromstring(self.simple_request('lookup_account_poll'))
-            auth_key = req_find(reply2, 'authenticator')
+            response = self.simple_request('lookup_account_poll')
+            et_response = ET.fromstring(response)
+            auth_key = et_find(et_response, 'authenticator')
             if auth_key is not None:
                 break
-            error = req_find(reply2, 'error_num')
+            error = et_find(et_response, 'error_num')
             if error is not None:
                 error = error.text
                 if error == '-204':
@@ -174,7 +175,7 @@ class BoincRpc():
                 if error in error_dict.keys():
                     raise BoincRpcError(error_dict[error])
             raise RuntimeError('Unknown Error ' + ET.tostring(error))
-        return auth_key.text
+        return response
 
     def project_attach(self, url, auth):
         """Attach to project or raise an error."""
@@ -185,5 +186,5 @@ class BoincRpc():
         xml_url.text, xml_auth.text = url, auth
         # request1
         self.request(xml)
-        reply2 = self.simple_request('project_attach_poll')
-        return reply2
+        response2 = self.simple_request('project_attach_poll')
+        return response2

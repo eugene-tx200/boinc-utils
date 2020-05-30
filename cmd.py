@@ -29,18 +29,18 @@ DEFAULT_PORT = 31416
 
 def print_xml(xml):
     """Print xml tree simmilar to boinccmd."""
-    # convert bytes to string
-    if isinstance(xml, bytes):
-        xml = xml.decode()
-    # convert string to ET object
-    if isinstance(xml, str):
+    def print_element(element):
+        tag, text = element.tag, element.text
+        if text and not text.strip() == '':
+            print('{}: {}'.format(tag, text))
+
+    if isinstance(xml, (str, bytes)):
         xml = ET.fromstring(xml)
     if not isinstance(xml, ET.Element):
-        sys.exit('Error: Reply is not a str or an ET object')
+        sys.exit('Error: Response is not a string or an ET object')
+    print_element(xml)
     for element in xml:
-        print('{}: {}'.format(element.tag, element.text))
-        if element:
-            print_xml(element)
+        print_xml(element)
 
 def get_password():
     """Function that read config file(s) and return password or None."""
@@ -116,8 +116,8 @@ def main():
             print_xml(req.acct_mgr_attach(url, name, input_pwd))
         if args.lookup_account:
             url, email, input_pwd = args.lookup_account
-            auth_key = req.lookup_account(url, email, input_pwd)
-            print('Authenticator: ', auth_key)
+            response = req.lookup_account(url, email, input_pwd)
+            print_xml(response)
         if args.project_attach:
             url, auth = args.project_attach
             print_xml(req.project_attach(url, auth))
