@@ -186,5 +186,11 @@ class BoincRpc():
         xml_url.text, xml_auth.text = url, auth
         # request1
         self.request(xml)
-        response2 = self.simple_request('project_attach_poll')
-        return response2
+        # request2
+        response = self.simple_request('project_attach_poll')
+        # Check for common errors
+        et_response = ET.fromstring(response)
+        error = et_find(et_response, 'error_num')
+        if error is not None and error.text == '-189':
+            raise BoincRpcError('Invalid URL')
+        return response

@@ -21,7 +21,7 @@
 import argparse
 import sys
 import xml.etree.ElementTree as ET
-from boincrpc import BoincRpc, BoincRpcError, PROJECT_CHOICES
+from boincrpc import BoincRpc, BoincRpcError, PROJECT_CHOICES, et_find
 
 
 DEFAULT_HOST = 'localhost'
@@ -120,7 +120,12 @@ def main():
             print_xml(response)
         if args.project_attach:
             url, auth = args.project_attach
-            print_xml(req.project_attach(url, auth))
+            response = ET.fromstring(req.project_attach(url, auth))
+            error = et_find(response, 'error_num')
+            if error is not None and error.text == '0':
+                print('Success')
+            else:
+                print_xml(response)
         if args.project:
             url, command = args.project
             if command not in PROJECT_CHOICES:
