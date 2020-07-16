@@ -24,7 +24,7 @@ from time import sleep
 PROJECT_CHOICES = ('reset', 'detach', 'update', 'suspend', 'resume',
                    'nomorework', 'allowmorework', 'detach_when_done',
                    'dont_detach_when_done')
-
+BUFFER_SIZE = 4096
 
 class BoincRpcError(ValueError):
     """Provided value(s) is invalid """
@@ -88,11 +88,15 @@ class BoincRpc():
         # Add closing tag
         xml_str += b'\003'
         self.sock.sendall(xml_str)
+        # Recieve responce
+        data = b''
+        while True:
+            part = self.sock.recv(BUFFER_SIZE)
+            data += part
+            if len(part) < BUFFER_SIZE:
+                break
         # [:-1] remove closing tag '\x03' from boinc response
-        response = self.sock.recv(65536)[:-1]
-        #print('Request: ', xml_str)
-        #print('Response: ', response)
-        return response
+        return data[:-1]
 
     def project_command(self, url, command):
         """Reqest template for project-related requests.
