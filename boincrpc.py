@@ -93,10 +93,10 @@ class BoincRpc():
         while True:
             part = self.sock.recv(BUFFER_SIZE)
             data += part
-            if len(part) < BUFFER_SIZE:
+            if part[-1:] == b'\x03':
                 break
-        # [:-1] remove closing tag '\x03' from boinc response
-        return data[:-1]
+        # Decode from bytes to str and remove closing tag '\x03'
+        return data.decode().rstrip('\x03')
 
     def project_command(self, url, command):
         """Reqest template for project-related requests.
