@@ -26,17 +26,20 @@ PROJECT_CHOICES = ('reset', 'detach', 'update', 'suspend', 'resume',
                    'dont_detach_when_done')
 BUFFER_SIZE = 4096
 
+
 class BoincRpcError(ValueError):
     """Provided value(s) is invalid """
     def __init__(self, msg, original_exception=None):
         super().__init__(msg)
         self.original_exception = original_exception
 
+
 def et_find(el_tree, tag):
     """ Search recursively Element tree and return first match or None"""
     for element in el_tree.iter(tag):
         return element
     return None
+
 
 class BoincRpc():
     """BoincRpc class is used to interact with boinc client."""
@@ -45,7 +48,8 @@ class BoincRpc():
         """Create socket connection and authenticate in boinc client."""
         self.sock = None
         try:
-            # Can cause at least TimeoutError, ConnectionRefusedError exceptions
+            # Can cause at least TimeoutError,
+            #                    ConnectionRefusedError exceptions
             self.sock = socket.create_connection((host, port), 5)
             if not self.sock:
                 raise RuntimeError('Missing socket')

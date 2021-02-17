@@ -27,6 +27,7 @@ from boincrpc import BoincRpc, BoincRpcError, PROJECT_CHOICES, et_find
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 31416
 
+
 def print_xml(xml):
     """Print xml tree simmilar to boinccmd."""
     def print_element(element):
@@ -42,6 +43,7 @@ def print_xml(xml):
     for element in xml:
         print_xml(element)
 
+
 def get_password():
     """Function that read config file(s) and return password or None."""
     path = '/etc/boinc-client/gui_rpc_auth.cfg'
@@ -53,6 +55,7 @@ def get_password():
     except PermissionError:
         print('Warning: Permission denied:', path)
     return False
+
 
 def get_parser():
     """ Return parser simmilar to the boinccmd command."""
@@ -83,6 +86,7 @@ def get_parser():
     parser.add_argument('--project', nargs=2, metavar=('URL', 'op'),
                         help='project operation. op = ' + str(PROJECT_CHOICES))
     return parser
+
 
 def main():
     """ Main Function. Intended to run from command line"""
@@ -134,6 +138,7 @@ def main():
             print_xml(req.project_command(url, command))
     except BoincRpcError as exception:
         sys.exit('Error: ' + str(exception))
+
 
 if __name__ == '__main__':
     main()
