@@ -92,7 +92,7 @@ class BoincRpc():
         # Add closing tag
         xml_str += b'\003'
         self.sock.sendall(xml_str)
-        # Recieve responce
+        # Recieve response
         data = b''
         while True:
             part = self.sock.recv(BUFFER_SIZE)
