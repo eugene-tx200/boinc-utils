@@ -22,7 +22,7 @@ from cmd import DEFAULT_HOST, DEFAULT_PORT, get_password
 from boincrpc import BoincRpc, et_find
 
 
-class Test_et_find(unittest.TestCase):
+class TestEtFind(unittest.TestCase):
     """Test et_find() function."""
     xml_string = ('<test_sample>'
                   '<one>1</one>'
@@ -51,7 +51,7 @@ class Test_et_find(unittest.TestCase):
         self.assertEqual(result, None)
 
 
-class Test_BoincRpc(unittest.TestCase):
+class TestBoincRpcMethods(unittest.TestCase):
     """Test BoincRpc class."""
     def setUp(self):
         self.password = get_password()
@@ -63,6 +63,30 @@ class Test_BoincRpc(unittest.TestCase):
         result = et_find(ET.fromstring(exchange_versions), 'major')
         # Check that respone contains some info
         self.assertEqual(result.tag, 'major')
+
+
+class IntegrationTestBoincRpcProjectMethods(unittest.TestCase):
+    """Integration test for BoincRpc project_* methods."""
+    def setUp(self):
+        self.password = get_password()
+        self.url = 'http://example.org/'
+        self.auth = '123456'
+        self.boinc_rpc = BoincRpc(DEFAULT_HOST, DEFAULT_PORT, self.password)
+
+    def test_project_methods(self):
+        """Integration test for project related calls."""
+        # Add test project to boinc client
+        self.boinc_rpc.project_attach(self.url, self.auth)
+        # Check that added project is present
+        status = self.boinc_rpc.simple_request('get_project_status')
+        result = et_find(ET.fromstring(status), 'master_url')
+        self.assertEqual(result.text, self.url)
+        # Remove test project from boinc client
+        self.boinc_rpc.project_command(self.url, 'detach')
+        # Check that test project has been removed
+        status = self.boinc_rpc.simple_request('get_project_status')
+        result = et_find(ET.fromstring(status), 'master_url')
+        self.assertEqual(result, None)
 
 
 if __name__ == '__main__':
